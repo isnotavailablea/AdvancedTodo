@@ -27,8 +27,8 @@ const todoSchema = z.object({
     userId : z.string().refine((val) => {
         return mongoose.Types.ObjectId.isValid(val)
       }),
-      header : z.string().min(3 , {message : "A todo shall be atleast of length 3"}).max(15 , {message : "Header Should Not exceed length 14"}),
-      description : z.string().max(100 , {message : "A todo shall not exceed 100 length Description"}),
+      header : z.string().min(3 , {message : "A todo shall be atleast of length 3"}).max(50 , {message : "Header Should Not exceed length 14"}),
+      description : z.string().max(1000 , {message : "A todo shall not exceed 100 length Description"}),
       done : z.boolean() 
 })
 
@@ -85,10 +85,15 @@ app.post("/todo" , tokenAuth , async (req , res)=>{
 })
 
 app.delete("/todo" , tokenAuth , async (req , res)=>{
-     const remo = await Todo.findOneAndDelete({
-        _id : req.body._id
-     })
-     res.status(200).send("Deleted SuccessFully")
+     try{
+        const remo = await Todo.findOneAndDelete({
+            _id : req.body._id
+         })
+         res.status(200).send("Deleted SuccessFully")
+     }
+     catch(err){
+        res.status(400).send("Unable to Delete")
+     }
 })
 
 app.put("/todo" , tokenAuth , async (req , res)=>{
