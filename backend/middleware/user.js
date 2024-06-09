@@ -15,7 +15,7 @@ const signupmiddleware = async (req , res , next)=>{
       })
       if(!store.success){
         // console.log(store.error.issues)
-        res.status(400).send(store.error.issues[0].message)
+        res.status(203).send(store.error.issues[0].message)
         // res.status(400).send(store.errors[0].message)
         return;
       }
@@ -23,26 +23,26 @@ const signupmiddleware = async (req , res , next)=>{
         const findExistingUser = await User.findOne({userName});
       if(findExistingUser){
         //  console.log(findExistingUser)
-         res.status(400).send(("User Already Exists !"))
+         res.status(203).send(("User Already Exists !"))
          return;
       }
       next();
       }
       catch(err){
         console.log("Error while Finding")
-        res.send("Error while Finding")
+        res.status(400).send("Error while Finding")
       }
 }
 const userAuth = async (req , res , next) =>{
     let userName = req.body.userName;
     let password = req.body.password;
-    // console.log(typeof(userName) , " ", password)
+    console.log((userName) , " ", password)
     const store =  userSchema.safeParse({
       userName , password
     })
     if(!store.success){
-      // console.log(store.error.issues)
-      res.status(400).send(store.error.issues[0].message)
+      console.log(store.error.issues)
+      res.status(203).send(store.error.issues[0].message)
       // res.status(400).send(store.errors[0].message)
       return;
     }
@@ -50,13 +50,13 @@ const userAuth = async (req , res , next) =>{
       const findExistingUser = await User.findOne({userName , password});
     if(!findExistingUser){
     //    console.log(findExistingUser)
-       res.status(400).send(("User was Not Found !"))
+       res.status(203).send(("User was Not Found !"))
        return;
     }
     next();
     }catch(err){
-      console.log("error while finding user")
-       res.send("ERROR WHILE FINDING USER")
+      // console.log("error while finding user")
+       res.status(400).send("ERROR WHILE FINDING USER")
     }
 }
 const tokenAuth = async (req , res , next) =>{
@@ -69,7 +69,7 @@ const tokenAuth = async (req , res , next) =>{
             const curDateAndTime = new Date().getTime()
             // console.log(curDateAndTime / 1000);
             if(!jsonRet.iat || !(((curDateAndTime / 1000) - jsonRet.iat) <= (10000000))){
-              res.status(400).send("Authentication Time Expired Please Try Again By logging Out")
+              res.status(203).send("Authentication Time Expired Please Try Again By logging Out")
               return;
             }
             const store =  z.object({
@@ -81,7 +81,7 @@ const tokenAuth = async (req , res , next) =>{
               })
               if(!store.success){
                 // console.log(store.error.issues)
-                res.status(400).send(store.error.issues[0].message)
+                res.status(203).send(store.error.issues[0].message)
                 // res.status(400).send(store.errors[0].message)
                 return;
               }
@@ -90,14 +90,14 @@ const tokenAuth = async (req , res , next) =>{
                 next()
               }
               else{
-                res.status(400).send("User Not Found")
+                res.status(203).send("User Not Found")
                 return;
               }
               
         }
     }
     catch(err){
-        // console.log(err)
+        console.log(err)
         res.status(400).send("Some Error While Authenticating")
     }
 }

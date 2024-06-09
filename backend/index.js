@@ -3,10 +3,14 @@ import mongoose  from 'mongoose';
 import dotenv  from 'dotenv';
 import jwt from'jsonwebtoken' ;
 dotenv.config();
+import cors from 'cors';
+
+
 // console.log(`Your port is ${process.env.PORT}`);
 const app = express()
 const port = 8000
 app.use(express.json())
+app.use(cors());
 import { signupmiddleware , userAuth , tokenAuth } from "./middleware/user.js";
 import {User} from "./Model/User.js";
 import {z} from "zod"
@@ -32,24 +36,24 @@ const todoSchema = z.object({
 app.post("/signup"  , signupmiddleware , async (req , res)=>{
     const addUser = await User.create({userName : req.body.userName , password : req.body.password})
     if(addUser.userName){
-        res.send(addUser)
+        res.status(200).send(addUser)
     }
     else{
         res.status(404).send("Some Unknown Error Occured")
     }
 })
 
-app.get("/login" , userAuth , async (req , res)=>{
+app.post("/login" , userAuth , async (req , res)=>{
     const userH = await User.findOne({userName: req.body.userName , password : req.body.password})
     let token =  jwt.sign({_id : userH._id}, 'aPrivateKeyOfMine');
-    res.send(token)
+    res.status(200).send(token)
 })
 
 const getValFromToken = (token) =>{
     return jwt.verify(token, 'aPrivateKeyOfMine')
 }
  
-app.post("/todo" , tokenAuth , async (req , res)=>{
+app.post("/addTodo" , tokenAuth , async (req , res)=>{
     const userInfo = getValFromToken(req.body.token)
     const store =  todoSchema.safeParse({
         userId : userInfo._id , 
@@ -59,7 +63,7 @@ app.post("/todo" , tokenAuth , async (req , res)=>{
       })
       if(!store.success){
         console.log(store.error.issues)
-        res.status(400).send(store.error.issues[0].message)
+        res.status(203).send(store.error.issues[0].message)
         // res.status(400).send(store.errors[0].message)
         return;
       }
@@ -69,22 +73,22 @@ app.post("/todo" , tokenAuth , async (req , res)=>{
         description : req.body.description,
         done : false
       })
-      res.send(todoTask)
+      res.status(200).send("Task Created SuccessFully")
 })
 
-app.get("/todo" , tokenAuth , async (req , res)=>{
+app.post("/todo" , tokenAuth , async (req , res)=>{
     const userInfo = getValFromToken(req.body.token)
     const Alltodos = await Todo.find({
         "userId" : userInfo._id
     })
-    res.send(Alltodos)
+    res.status(200).send(Alltodos)
 })
 
 app.delete("/todo" , tokenAuth , async (req , res)=>{
      const remo = await Todo.findOneAndDelete({
         _id : req.body._id
      })
-     res.send(remo)
+     res.status(200).send("Deleted SuccessFully")
 })
 
 app.put("/todo" , tokenAuth , async (req , res)=>{
@@ -96,7 +100,7 @@ app.put("/todo" , tokenAuth , async (req , res)=>{
         done : req.body.done
     })
     if(!check.success){
-        res.status(400).send(check.error.issues[0].message)
+        res.status(203).send(check.error.issues[0].message)
         return;
     }
     let doc = await Todo.findOneAndUpdate({
@@ -110,24 +114,24 @@ app.put("/todo" , tokenAuth , async (req , res)=>{
 })
 
 
-app.get("/hi" , tokenAuth , async (req , res)=>{
+app.post("/hi" , tokenAuth , async (req , res)=>{
+    // console.log("ueidm")
     let token = await req.body.token
     try{
         const jsonRet = jwt.verify(token, 'aPrivateKeyOfMine')
         const getUser = await User.findOne({_id : jsonRet._id})
         if(getUser){
-            res.send(getUser)
+            res.status(200).send(getUser)
+            return
         }
         else{
-            res.send("No Such user exists")
+            res.status(203).send("No Such user exists")
         }
     }
     catch(err){
-        // console.log(err)
         res.status(400).send("Some Error While Finding User")
     }
 })
-// console.log(process.env.ATLAS_URI)
 app.listen(port , ()=>{
     console.log("Server is active at : " , port);
 })
